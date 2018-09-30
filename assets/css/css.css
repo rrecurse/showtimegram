@@ -395,3 +395,9 @@ body {
   position: fixed;
   text-align: center;
 }
+
+#pagination_controls {
+  width: 100%;
+  text-align: center;
+  margin: 20px auto;
+}

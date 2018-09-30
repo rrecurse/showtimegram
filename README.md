@@ -14,4 +14,5 @@ A small project called ShowtimeGram, for the folks over at Showtime / CBS
  - Detects if image directory exists and creates it if it does not. 
  - Checks if proper write permissions exist on upload directory.
  - Unique ID and path are removed from file names when displaying output to user.
-
+ - Pagination of results - no complex logic or heavy crutches required.
+ - Real-time drill-down search of results on keyup.

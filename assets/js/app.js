@@ -1,4 +1,5 @@
 // # Some global vars
+let container = document.getElementById("container");
 let message = document.getElementById("messages");
 let modal = document.getElementById('modal');
 let resultsDiv = document.getElementById("results");
@@ -8,9 +9,10 @@ window.addEventListener('load', function() {
   init();
 });
 
-function init(query='*') {
+function init(query='*', page=1) {
   let searchData = new FormData();
   searchData.append('search', query);
+  searchData.append('page', page);
   ajaxCall(searchData, 'process.php', 'POST');
 }
 
@@ -73,6 +75,18 @@ document.addEventListener('click', function(e){
   if(el.matches('#clear')) {
     return document.getElementById("image-form").reset();
   }
+
+  // # paginate the results
+  if(el.matches('#last-page') || el.matches('#next-page')) {
+    // # clear the search field if set
+    document.getElementById("search").reset();
+
+    if(el.getAttribute('data-page')) {
+      let page = el.getAttribute('data-page');
+      return init('*', page);
+    }
+  }
+
 }, false);
 
 document.addEventListener('keyup', function(e){
@@ -83,7 +97,7 @@ document.addEventListener('keyup', function(e){
   if(e.key === "Escape") fadeOut(modal);
 
   let el = e.target;
-  if (el.matches('.searchField')) {
+  if (el.matches('#searchField')) {
     // # if value is null, show all
     if(el.value.length == 0) init();
     // # prevent lookup if less than 2 chars
@@ -137,13 +151,26 @@ function ajaxCall(data, action, method) {
         let NULLdiv = document.getElementById('noresults');
         if(NULLdiv) resultsDiv.removeChild(NULLdiv);
 
+        let pagination = jsonData.results.find(function(el) {
+          return el.pagination;
+        });
+
+        // # generate pagination
+        paginate(pagination.pagination);
+
         if( typeof jsonData.results !== 'string' ) {
+
+          // # unset the pagination row
+          jsonData.results.splice( jsonData.results.indexOf('pagination') , 1);
+
+          // # format the results object and inject into DOM.
           formatHTML(jsonData.results);
         }
 
+        // # hide the modal if opened.
         fadeOut(modal);
 
-        // # Clear the form.
+        // # Clear the upload form.
         if(document.getElementById("image-form")) {
           document.getElementById("image-form").reset();
         }
@@ -175,6 +202,50 @@ function ajaxCall(data, action, method) {
   xhr.send(data);
 
   return 'success';
+}
+
+function paginate(pagination) {
+
+  let page = pagination.current_page
+  if(page < 1) page = 1;
+
+  let limit = pagination.max_results;
+  let total_rows = pagination.total_count;
+  //let last = (page < 1 ? 1 : (page -1));
+  let last = pagination.last_page;
+  //let next = ((page+1) > page ? (page +1) : page);
+  let next = pagination.next_page;
+
+  // # total number of possible pages
+  let page_count = Math.ceil(total_rows / limit);
+
+  // # only create the pagination_controls control div on initial load
+  if(!document.getElementById('pagination_controls')) {
+    let pagination_controls = document.createElement("div");
+    pagination_controls.setAttribute('id', 'pagination_controls');
+    container.appendChild(pagination_controls);
+  }
+
+  // # clear the controls on load
+  pagination_controls.innerHTML='';
+
+  let paginationCtrls = "";
+
+  if (page > 1) {
+    paginationCtrls += '<button data-page="'+last+'" id="last-page">&lt;</button>';
+  } else {
+    paginationCtrls += '<button disabled="disabled">&lt;</button>';
+  }
+
+  paginationCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
+
+  if (next !=='') {
+    paginationCtrls += '<button data-page="'+next+'" id="next-page">&gt;</button>';
+  } else {
+    paginationCtrls += '<button disabled="disabled">&gt;</button>';
+  }
+
+  pagination_controls.innerHTML = paginationCtrls;
 }
 
 function uploadForm(e) {
@@ -304,44 +375,48 @@ function fadeOut(el){
 function formatHTML(jsonData) {
 
   for (var i = 0; i < jsonData.length; i++) {
+ 
+    // # don't render row for total count used in pagination
 
-    let resultContent = document.createElement("DIV");
-    resultContent.classList.add("image-block");
-    resultContent.setAttribute('data-id', jsonData[i].id);
+    if(!jsonData[i].pagination) {
+      let resultContent = document.createElement("DIV");
+      resultContent.classList.add("image-block");
+      resultContent.setAttribute('data-id', jsonData[i].id);
 
-    resultsDiv.appendChild(resultContent);
+      resultsDiv.appendChild(resultContent);
 
-    let resultContentHref = document.createElement("a");
-    resultContentHref.setAttribute('href', jsonData[i].filename);
-    resultContentHref.setAttribute('target', 'blank');
+      let resultContentHref = document.createElement("a");
+      resultContentHref.setAttribute('href', jsonData[i].filename);
+      resultContentHref.setAttribute('target', 'blank');
 
-    resultContent.appendChild(resultContentHref);
+      resultContent.appendChild(resultContentHref);
 
-    let resultContentImg = document.createElement("img");
-    resultContentImg.setAttribute('src', jsonData[i].filename);
-    resultContentHref.appendChild(resultContentImg);
+      let resultContentImg = document.createElement("img");
+      resultContentImg.setAttribute('src', jsonData[i].filename);
+      resultContentHref.appendChild(resultContentImg);
 
-    let resultContentUser = document.createElement("div");
-    resultContentUser.classList.add("user");
-    let resultContentUserTxt = document.createTextNode("by: " + jsonData[i].username);
-    resultContentUser.appendChild(resultContentUserTxt);
+      let resultContentUser = document.createElement("div");
+      resultContentUser.classList.add("user");
+      let resultContentUserTxt = document.createTextNode("by: " + jsonData[i].username);
+      resultContentUser.appendChild(resultContentUserTxt);
 
-    resultContent.appendChild(resultContentUser);
+      resultContent.appendChild(resultContentUser);
 
-    let resultContentCaption = document.createElement("div");
-    resultContentCaption.classList.add("caption");
+      let resultContentCaption = document.createElement("div");
+      resultContentCaption.classList.add("caption");
 
-    resultContent.appendChild(resultContentCaption);
-    let resultContentCaptionTxt = document.createTextNode(jsonData[i].caption);
-    // # to avoid complex html-entity decoding, innerHTML the caption
-    //resultContentCaption.appendChild(resultContentCaptionTxt);
-    resultContentCaption.innerHTML = jsonData[i].caption;
+      resultContent.appendChild(resultContentCaption);
+      let resultContentCaptionTxt = document.createTextNode(jsonData[i].caption);
+      // # to avoid complex html-entity decoding, innerHTML the caption
+      //resultContentCaption.appendChild(resultContentCaptionTxt);
+      resultContentCaption.innerHTML = jsonData[i].caption;
 
-    let resultContentDelete = document.createElement("div");
-    resultContentDelete.classList.add("delete");
-    resultContent.appendChild(resultContentDelete);
-    let resultContentDeleteTxt = document.createTextNode('Delete?');
-    resultContentDelete.appendChild(resultContentDeleteTxt);
+      let resultContentDelete = document.createElement("div");
+      resultContentDelete.classList.add("delete");
+      resultContent.appendChild(resultContentDelete);
+      let resultContentDeleteTxt = document.createTextNode('Delete?');
+      resultContentDelete.appendChild(resultContentDeleteTxt);
+    }
   }
 }
 
