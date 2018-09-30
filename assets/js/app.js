@@ -183,6 +183,11 @@ function ajaxCall(data, action, method) {
           resultsDiv.appendChild(resultContentNULL);
           let resultContentNULLTxt = document.createTextNode(jsonData.results);
           resultContentNULL.appendChild(resultContentNULLTxt);
+
+          // # clear the pagination div if exists
+          if(document.getElementById('pagination')) {
+            document.getElementById('pagination').innerHTML='';
+          }
       }
 
     }
@@ -219,33 +224,36 @@ function paginate(pagination) {
   // # total number of possible pages
   let page_count = Math.ceil(total_rows / limit);
 
-  // # only create the pagination_controls control div on initial load
-  if(!document.getElementById('pagination_controls')) {
-    let pagination_controls = document.createElement("div");
-    pagination_controls.setAttribute('id', 'pagination_controls');
-    container.appendChild(pagination_controls);
+  // # only create the pagination control div on initial load
+  if(!document.getElementById('pagination')) {
+    let pagination = document.createElement("div");
+    pagination.setAttribute('id', 'pagination');
+    container.appendChild(pagination);
   }
 
   // # clear the controls on load
-  pagination_controls.innerHTML='';
+  pagination.innerHTML='';
 
   let paginationCtrls = "";
 
-  if (page > 1) {
-    paginationCtrls += '<button data-page="'+last+'" id="last-page">&lt;</button>';
-  } else {
-    paginationCtrls += '<button disabled="disabled">&lt;</button>';
+  if(total_rows >= 1) {
+
+    if (page > 1) {
+      paginationCtrls += '<button data-page="'+last+'" id="last-page">&lt;</button>';
+    } else {
+      paginationCtrls += '<button disabled="disabled">&lt;</button>';
+    }
+
+    paginationCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
+
+    if (next !=='') {
+      paginationCtrls += '<button data-page="'+next+'" id="next-page">&gt;</button>';
+    } else {
+      paginationCtrls += '<button disabled="disabled">&gt;</button>';
+    }
   }
 
-  paginationCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
-
-  if (next !=='') {
-    paginationCtrls += '<button data-page="'+next+'" id="next-page">&gt;</button>';
-  } else {
-    paginationCtrls += '<button disabled="disabled">&gt;</button>';
-  }
-
-  pagination_controls.innerHTML = paginationCtrls;
+  pagination.innerHTML = paginationCtrls;
 }
 
 function uploadForm(e) {
