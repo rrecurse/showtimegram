@@ -147,6 +147,7 @@ function ajaxCall(data, action, method) {
       } else if (jsonData.status == 'Success') {
 
         resultsDiv.innerHTML='';
+
         // # remove the NULL status div
         let NULLdiv = document.getElementById('noresults');
         if(NULLdiv) resultsDiv.removeChild(NULLdiv);
@@ -158,7 +159,7 @@ function ajaxCall(data, action, method) {
         // # generate pagination
         paginate(pagination.pagination);
 
-        if( typeof jsonData.results !== 'string' ) {
+        if(typeof jsonData.results !== 'string') {
 
           // # unset the pagination row
           jsonData.results.splice( jsonData.results.indexOf('pagination') , 1);
@@ -185,8 +186,9 @@ function ajaxCall(data, action, method) {
           resultContentNULL.appendChild(resultContentNULLTxt);
 
           // # clear the pagination div if exists
-          if(document.getElementById('pagination')) {
-            document.getElementById('pagination').innerHTML='';
+          if(document.getElementById('paginate')) {
+            let paginate = document.getElementById('paginate');
+            container.removeChild(paginate);
           }
       }
 
@@ -214,46 +216,53 @@ function paginate(pagination) {
   let page = pagination.current_page
   if(page < 1) page = 1;
 
-  let limit = pagination.max_results;
-  let total_rows = pagination.total_count;
-  //let last = (page < 1 ? 1 : (page -1));
+  let max_results = pagination.max_results;
+  let total_count = pagination.total_count;
   let last = pagination.last_page;
-  //let next = ((page+1) > page ? (page +1) : page);
   let next = pagination.next_page;
 
   // # total number of possible pages
-  let page_count = Math.ceil(total_rows / limit);
+  let page_count = Math.ceil(total_count / max_results);
 
-  // # only create the pagination control div on initial load
-  if(!document.getElementById('pagination')) {
-    let pagination = document.createElement("div");
-    pagination.setAttribute('id', 'pagination');
-    container.appendChild(pagination);
-  }
+  if(total_count > 0) {
 
-  // # clear the controls on load
-  pagination.innerHTML='';
+    // # only create the pagination control div on initial load
+    if(!document.getElementById('paginate')) {
+      let paginate = document.createElement("div");
+      paginate.setAttribute('id', 'paginate');
+      container.appendChild(paginate);
+    }
 
-  let paginationCtrls = "";
+    // # clear the controls on load
+    paginate.innerHTML='';
 
-  if(total_rows >= 1) {
+    let paginateCtrls = "";
 
     if (page > 1) {
-      paginationCtrls += '<button data-page="'+last+'" id="last-page">&lt;</button>';
+      paginateCtrls += '<button data-page="'+last+'" id="last-page">&lt;</button>';
     } else {
-      paginationCtrls += '<button disabled="disabled">&lt;</button>';
+      paginateCtrls += '<button disabled="disabled">&lt;</button>';
     }
 
-    paginationCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
+    paginateCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
 
     if (next !=='') {
-      paginationCtrls += '<button data-page="'+next+'" id="next-page">&gt;</button>';
+      paginateCtrls += '<button data-page="'+next+'" id="next-page">&gt;</button>';
     } else {
-      paginationCtrls += '<button disabled="disabled">&gt;</button>';
+      paginateCtrls += '<button disabled="disabled">&gt;</button>';
+    }
+
+    document.getElementById('paginate').innerHTML = paginateCtrls;
+
+  } else {
+
+    // # remove the pagination div from DOM if exists
+    if(document.getElementById('paginate')) {
+      container.removeChild(document.getElementById('paginate'));
     }
   }
 
-  pagination.innerHTML = paginationCtrls;
+
 }
 
 function uploadForm(e) {
