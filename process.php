@@ -192,28 +192,17 @@ class ShowtimeGram {
 			// # Set the range of rows for selected $page number
 			$limit = 'LIMIT '.$max_results . $offset;
 
-//error_log(print_r($page_count,1));
 			// # if keyword is ALL indicator, show all - includes pagination
 			if ($keyword !== '*') {
 
-				$sql = "SELECT id,
-							   username,
-							   caption,
-							   filename,
-							   date							   
-                		FROM showgrams 
-                		WHERE filename LIKE '%{$keyword}%' OR caption LIKE '%{$keyword}%'
+				$sql = "SELECT id, username, caption, filename, date FROM showgrams
+						WHERE filename LIKE '%{$keyword}%' OR caption LIKE '%{$keyword}%'
                 		ORDER BY filename DESC 
                 		{$limit}
                 		";
 			} else {
 
-				$sql = "SELECT id,
-							   username,
-							   caption,
-							   filename,
-							   date
-                		FROM showgrams 
+				$sql = "SELECT id, username, caption, filename, date FROM showgrams 
                 		ORDER BY date DESC 
                 		{$limit}
                 		";
@@ -233,13 +222,15 @@ class ShowtimeGram {
 
 			if (!empty($results)) {
 
-				$results[] = array('pagination' => array('total_count' => $total_count,
-														 'max_results' => $max_results,
-														 'current_page' => $page,
-														 'last_page' => $last,
-														 'next_page' => $next
-														)
-								  );
+				$results[] = array(
+					'pagination' => array(
+						'total_count' => $total_count,
+						'max_results' => $max_results,
+						'current_page' => $page,
+						'last_page' => $last,
+						'next_page' => $next
+						)
+					);
 
 				return $this->parseResponse('1', $results);
 			} else {
@@ -249,11 +240,6 @@ class ShowtimeGram {
 		} catch(Exception $e) {
 			return $this->errorHandler(1, $e);
 		}
-	}
-
-	// # paginate the results
-	private function pageResults() {
-
 	}
 
 	// # process and save the uploaded image
@@ -386,10 +372,7 @@ class ShowtimeGram {
 			$status = "OK";
 		}
 
-		$results = json_encode(array(
-			"status" => $status,
-			"results" => $result
-		));
+		$results = json_encode(array("status" => $status, "results" => $result));
 
 		return $results;
 	}
@@ -397,10 +380,7 @@ class ShowtimeGram {
 	private function errorHandler($status, $message = '') {
 
 		if ($status == 1) {
-			$errors = json_encode(array(
-				"status" => "Error",
-				"message" => $message
-			));
+			$errors = json_encode(array("status" => "Error", "message" => $message));
 		}
 
 		//error_log('errors = ' . print_r(json_decode($errors)->message, 1));
