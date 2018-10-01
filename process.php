@@ -185,6 +185,8 @@ class ShowtimeGram {
 			// # Set the range of rows for selected $page number
 			$limit = 'LIMIT '.$max_results . $offset;
 
+			$results = array();
+
 			// # if keyword is ALL indicator, show all - includes pagination
 			if ($keyword !== '*') {
 
@@ -193,24 +195,34 @@ class ShowtimeGram {
 					ORDER BY filename DESC 
 					{$limit}
 					";
-			} else {
 
+				$db->busyTimeout(2000);
+
+				$response = $db->query($sql);
+
+				while ($row = $response->fetchArray(SQLITE3_ASSOC)) {
+					$results[] = $row;
+				}
+
+				$total_count = count($results);
+
+			} else {
+			
 				$sql = "SELECT id, username, caption, filename, date FROM showgrams 
 					ORDER BY date DESC 
 					{$limit}
 					";
+
+				$db->busyTimeout(2000);
+
+				$response = $db->query($sql);
+
+				while ($row = $response->fetchArray(SQLITE3_ASSOC)) {
+					$results[] = $row;
+				}
+
 			}
-
-			$db->busyTimeout(2000);
-
-			$response = $db->query($sql);
-
-			$results = array();
-
-			while ($row = $response->fetchArray(SQLITE3_ASSOC)) {
-				$results[] = $row;
-			}
-
+			
 			$db->close();
 
 			if (!empty($results)) {

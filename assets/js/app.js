@@ -78,6 +78,9 @@ document.addEventListener('click', function(e){
 
   // # paginate the results
   if(el.matches('#last-page') || el.matches('#next-page')) {
+
+    e.preventDefault();
+
     // # clear the search field if set
     document.getElementById("search").reset();
 
@@ -85,6 +88,20 @@ document.addEventListener('click', function(e){
       let page = el.getAttribute('data-page');
       return init('*', page);
     }
+  }
+
+  if(el.matches('.page')) {
+    e.preventDefault();
+
+    // # clear the search field if set
+    document.getElementById("search").reset();
+
+    // # ensure page number is an int
+    if (Number.isInteger(parseInt(el.innerHTML))) {
+      let page = el.innerHTML;
+      return init('*', page);
+    }
+
   }
 
 }, false);
@@ -160,10 +177,8 @@ function ajaxCall(data, action, method) {
         paginate(pagination.pagination);
 
         if(typeof jsonData.results !== 'string') {
-
           // # unset the pagination row
           jsonData.results.splice( jsonData.results.indexOf('pagination') , 1);
-
           // # format the results object and inject into DOM.
           formatHTML(jsonData.results);
         }
@@ -239,17 +254,23 @@ function paginate(pagination) {
     let paginateCtrls = "";
 
     if (page > 1) {
-      paginateCtrls += '<button data-page="'+last+'" id="last-page">&lt;</button>';
+      paginateCtrls += '<a data-page="'+last+'" id="last-page">&lt;</a>';
     } else {
-      paginateCtrls += '<button disabled="disabled">&lt;</button>';
+      paginateCtrls += '<a class="isDisabled">&lt;</a>';
     }
 
-    paginateCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
+    // # alternative to show just page count and current page position
+    //paginateCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
 
-    if (next !=='') {
-      paginateCtrls += '<button data-page="'+next+'" id="next-page">&gt;</button>';
+    // # create the page links based on row count
+    for(var i=1; i <= page_count; i++){
+      paginateCtrls += '<a class="page'+(page == i ? ' active' : '')+'">' + i + '</a> ';
+    }
+
+    if (next !== '') {
+      paginateCtrls += '<a data-page="'+next+'" id="next-page">&gt;</a>';
     } else {
-      paginateCtrls += '<button disabled="disabled">&gt;</button>';
+      paginateCtrls += '<a class="isDisabled">&gt;</a>';
     }
 
     document.getElementById('paginate').innerHTML = paginateCtrls;
@@ -261,8 +282,6 @@ function paginate(pagination) {
       container.removeChild(document.getElementById('paginate'));
     }
   }
-
-
 }
 
 function uploadForm(e) {
@@ -363,6 +382,7 @@ function fadeIn(el, display) {
 }
 
 function fadeOut(el){
+
   el.style.opacity = 1;
   
   (function fade() {
