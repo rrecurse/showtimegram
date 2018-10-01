@@ -189,16 +189,16 @@ class ShowtimeGram {
 			if ($keyword !== '*') {
 
 				$sql = "SELECT id, username, caption, filename, date FROM showgrams
-						WHERE filename LIKE '%{$keyword}%' OR caption LIKE '%{$keyword}%'
-						ORDER BY filename DESC 
-						{$limit}
-						";
+					WHERE filename LIKE '%{$keyword}%' OR caption LIKE '%{$keyword}%'
+					ORDER BY filename DESC 
+					{$limit}
+					";
 			} else {
 
 				$sql = "SELECT id, username, caption, filename, date FROM showgrams 
-						ORDER BY date DESC 
-						{$limit}
-						";
+					ORDER BY date DESC 
+					{$limit}
+					";
 			}
 
 			$db->busyTimeout(2000);
