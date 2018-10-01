@@ -175,7 +175,7 @@ class ShowtimeGram {
 			$page = ($page == 0 ? 1 : $page);
 
 			// # if page minus 1 equals zero, set last page as 1
-			$last = ($page < 1 == 0 ? 1 : $page < 1);
+			$last = (($page-1) == 0 ? 1 : ($page-1));
 
 			$next = ($page+1 > $page_count ? '' : $page +1);
 
@@ -259,7 +259,10 @@ class ShowtimeGram {
 		$file_tmp = $_FILES['files']['tmp_name'][0];
 		$file_size = $_FILES['files']['size'][0];
 		$file_ext = pathinfo($_FILES['files']['name'][0], PATHINFO_EXTENSION);
-		//$file_type = $_FILES['files']['type'][0];
+
+		// # fix filenames with spaces - replace with underscores
+		$original_name = str_replace(' ', '_', $original_name);
+
 		$filename = $original_name . '_' . uniqid() . '.' . $file_ext;
 
 		$filepath = $path . $filename;
@@ -348,7 +351,7 @@ class ShowtimeGram {
 		// # if path is a URL, skip removal of unique ID from filename
 		if (strpos($path, 'https:') === false || strpos($path, 'https:') === false) {
 			$uniqeid = substr(strrchr($file['filename'], "_") , 1);
-			$filename = str_replace('_' . $uniqeid, '', $filename);
+			$filename = str_replace('_'.$uniqeid, '', $filename);
 		}
 
 		return $filename;
