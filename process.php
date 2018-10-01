@@ -55,16 +55,9 @@ class ShowtimeGram {
 			// # this assumes the table showgrams already exists
 			// # table & database creation performed in instantiate method filterResults()
 			$db = new SQLite3('showtime.db');
-
-			$sql = "INSERT INTO showgrams
-                    VALUES(
-                        NULL,
-                        '" . $username . "',
-                        '" . $caption . "',
-                        '" . $filename . "',
-                        '" . $date . "'
-                       )";
-
+			
+			$sql = "INSERT INTO showgrams VALUES(NULL, '".$username."', '".$caption."','".$filename."','".$date."')";
+			
 			$db->busyTimeout(2000);
 
 			$db->exec($sql);
@@ -157,11 +150,11 @@ class ShowtimeGram {
 
 				$sql = "CREATE TABLE IF NOT EXISTS showgrams (
 							id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            username VARCHAR (255) NOT NULL,
-                            caption TEXT NOT NULL,
-                            filename VARCHAR (255) NOT NULL,
-                            date TEXT NOT NULL
-                           )";
+							username VARCHAR (255) NOT NULL,
+							caption TEXT NOT NULL,
+							filename VARCHAR (255) NOT NULL,
+							date TEXT NOT NULL
+						)";
 
 				$db->busyTimeout(2000);
 
@@ -197,15 +190,15 @@ class ShowtimeGram {
 
 				$sql = "SELECT id, username, caption, filename, date FROM showgrams
 						WHERE filename LIKE '%{$keyword}%' OR caption LIKE '%{$keyword}%'
-                		ORDER BY filename DESC 
-                		{$limit}
-                		";
+						ORDER BY filename DESC 
+						{$limit}
+						";
 			} else {
 
 				$sql = "SELECT id, username, caption, filename, date FROM showgrams 
-                		ORDER BY date DESC 
-                		{$limit}
-                		";
+						ORDER BY date DESC 
+						{$limit}
+						";
 			}
 
 			$db->busyTimeout(2000);
