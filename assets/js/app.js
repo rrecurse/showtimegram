@@ -246,14 +246,15 @@ function ajaxCall(data, action, method) {
 
 function loadSpinner() {
   
-  let spinner_container= document.createElement("DIV");
-  spinner_container.setAttribute('id', 'spinner_container');
-  let spinner = document.createElement("DIV");
-  spinner.setAttribute('id', 'spinner');
-  spinner_container.appendChild(spinner);
+  if(!document.getElementById('spinner')) {
+    let spinner_container= document.createElement("DIV");
+    spinner_container.setAttribute('id', 'spinner_container');
+    let spinner = document.createElement("DIV");
+    spinner.setAttribute('id', 'spinner');
+    spinner_container.appendChild(spinner);
 
-  container.prepend(spinner_container);
-
+    container.prepend(spinner_container);
+  }
 }
 
 function paginate(pagination) {
