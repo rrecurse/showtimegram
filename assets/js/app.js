@@ -125,6 +125,9 @@ document.addEventListener('keyup', function(e){
 
 function ajaxCall(data, action, method) {
 
+  // # create a DOM element for spinner load graphic
+  loadSpinner();
+
   let xhr = new XMLHttpRequest();
   let result='';
 
@@ -147,7 +150,11 @@ function ajaxCall(data, action, method) {
         message.classList.add("error");
 
         message.innerHTML = jsonData.status + ' - ' + jsonData.message;
-        fadeOut(modal);
+        
+        // # hide the modal if opened.
+        if(modal.firstElementChild) {
+          fadeOut(modal);
+        }
 
       } else if(jsonData.status == 'Update') {
 
@@ -158,23 +165,34 @@ function ajaxCall(data, action, method) {
 
         message.innerHTML = jsonData.status + ' - ' + jsonData.results;
 
-        fadeOut(modal);
+        // # hide the modal if opened.
+        if(modal.firstElementChild) {
+          fadeOut(modal);
+        }
+
         init();
 
       } else if (jsonData.status == 'Success') {
 
+        // # hide the modal if opened.
+        if(modal.firstElementChild) {
+          fadeOut(modal);
+        }
+
+        // # fade out the results div for new results
+        fadeOut(resultsDiv);
+
+        // # empty the results div completly.
         resultsDiv.innerHTML='';
 
         // # remove the NULL status div
         let NULLdiv = document.getElementById('noresults');
         if(NULLdiv) resultsDiv.removeChild(NULLdiv);
 
+        // # find the pagination object member in the response
         let pagination = jsonData.results.find(function(el) {
           return el.pagination;
         });
-
-        // # generate pagination
-        paginate(pagination.pagination);
 
         if(typeof jsonData.results !== 'string') {
           // # unset the pagination row
@@ -183,8 +201,8 @@ function ajaxCall(data, action, method) {
           formatHTML(jsonData.results);
         }
 
-        // # hide the modal if opened.
-        fadeOut(modal);
+        // # generate pagination
+        paginate(pagination.pagination);
 
         // # Clear the upload form.
         if(document.getElementById("image-form")) {
@@ -226,6 +244,18 @@ function ajaxCall(data, action, method) {
   return 'success';
 }
 
+function loadSpinner() {
+  
+  let spinner_container= document.createElement("DIV");
+  spinner_container.setAttribute('id', 'spinner_container');
+  let spinner = document.createElement("DIV");
+  spinner.setAttribute('id', 'spinner');
+  spinner_container.appendChild(spinner);
+
+  container.prepend(spinner_container);
+
+}
+
 function paginate(pagination) {
 
   let page = pagination.current_page
@@ -239,11 +269,13 @@ function paginate(pagination) {
   // # total number of possible pages
   let page_count = Math.ceil(total_count / max_results);
 
-  if(total_count > 0) {
+  var paginate = document.getElementById('paginate');
 
-    // # only create the pagination control div on initial load
-    if(!document.getElementById('paginate')) {
-      let paginate = document.createElement("div");
+  if(total_count > 0) {  
+
+    // # create the pagination control div if not in DOM
+    if(paginate == null) {
+      paginate = document.createElement("div");
       paginate.setAttribute('id', 'paginate');
       container.appendChild(paginate);
     }
@@ -251,35 +283,35 @@ function paginate(pagination) {
     // # clear the controls on load
     paginate.innerHTML='';
 
-    let paginateCtrls = "";
+    let pageLinks = "";
 
     if (page > 1) {
-      paginateCtrls += '<a data-page="'+last+'" id="last-page">&lt;</a>';
+      pageLinks += '<a data-page="'+last+'" id="last-page">&lt;</a>';
     } else {
-      paginateCtrls += '<a class="isDisabled">&lt;</a>';
+      pageLinks += '<a class="isDisabled">&lt;</a>';
     }
 
     // # alternative to show just page count and current page position
-    //paginateCtrls += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
+    //pageLinks += ' &nbsp; &nbsp; <b>Page '+page+' of '+page_count+'</b> &nbsp; &nbsp; ';
 
     // # create the page links based on row count
     for(var i=1; i <= page_count; i++){
-      paginateCtrls += '<a class="page'+(page == i ? ' active' : '')+'">' + i + '</a> ';
+      pageLinks += '<a class="page'+(page == i ? ' active' : '')+'">' + i + '</a> ';
     }
 
     if (next !== '') {
-      paginateCtrls += '<a data-page="'+next+'" id="next-page">&gt;</a>';
+      pageLinks += '<a data-page="'+next+'" id="next-page">&gt;</a>';
     } else {
-      paginateCtrls += '<a class="isDisabled">&gt;</a>';
+      pageLinks += '<a class="isDisabled">&gt;</a>';
     }
 
-    document.getElementById('paginate').innerHTML = paginateCtrls;
+    paginate.innerHTML = pageLinks;
 
   } else {
 
     // # remove the pagination div from DOM if exists
-    if(document.getElementById('paginate')) {
-      container.removeChild(document.getElementById('paginate'));
+    if(paginate) {
+      container.removeChild(paginate);
     }
   }
 }
@@ -353,69 +385,26 @@ function formatFilename(filepath) {
   return newname;
 }
 
-function fadeIn(el, display) {
-  el.style.opacity = 0;
-  el.style.display = display || "block";
-
-  // # prevent body scroll when modal is visible
-  // # using fixed results in jump to top of page
-  //document.body.style.position = 'fixed';
-  document.body.style.overflowY = 'hidden';
-  document.body.style.marginRight = '24px';
-  document.body.style.width = (window.innerWidth - 36) +'px';
-
-  // # if modal exists and has classList
-  if(modal.firstElementChild) {
-    let modalClasses = modal.firstElementChild.classList;
-    if(modalClasses.contains('modal-close')) {
-      modalClasses.remove('modal-close');
-    }
-  }
-    
-  (function fade() {
-    let val = parseFloat(el.style.opacity);
-    if (!((val += .1) > 1)) {
-      el.style.opacity = val;
-      requestAnimationFrame(fade);
-    }
-  })();
-}
-
-function fadeOut(el){
-
-  el.style.opacity = 1;
-  
-  (function fade() {
-    if ((el.style.opacity -= .1) < 0) {      
-      el.style.display = "none";
-      document.body.style.overflowY = 'auto';
-      document.body.style.marginRight = '';
-
-    } else {
-
-      // # if modal is present and has classList
-      if(modal.firstElementChild) {
-        let modalClasses = modal.firstElementChild.classList;
-        if(!modalClasses.contains('modal-close')) {
-          modalClasses.add('modal-close');
-        }
-      }
-      requestAnimationFrame(fade);
-      // # slight delay to avoid clearing element too quickly
-      setTimeout(function(){
-        modal.innerHTML = ''
-      }, 200);
-    }
-  })();
-}
-
 function formatHTML(jsonData) {
+
+  // # define the spinner graphic
+  let spinner = document.getElementById('spinner_container');
 
   for (var i = 0; i < jsonData.length; i++) {
  
-    // # don't render row for total count used in pagination
-
+    // # don't render row for total_count used in pagination
     if(!jsonData[i].pagination) {
+
+      // # remove the spinner if if exists
+      setTimeout(function(){
+        if(spinner) {
+          if(container.contains(spinner)) {
+            container.removeChild(spinner);
+          }
+        }
+      }, 500);
+
+      
       let resultContent = document.createElement("DIV");
       resultContent.classList.add("image-block");
       resultContent.setAttribute('data-id', jsonData[i].id);
@@ -455,6 +444,10 @@ function formatHTML(jsonData) {
       resultContentDelete.appendChild(resultContentDeleteTxt);
     }
   }
+
+  setTimeout(function() {
+    fadeIn(resultsDiv);
+  }, 500);
 }
 
 function modalContent(type, id='', filename='') {
@@ -635,4 +628,59 @@ function modalContent(type, id='', filename='') {
   }
     // # finally, append everything to main modal element
     modal.appendChild(modalContents);
+}
+
+function fadeIn(el, display) {
+
+  el.style.opacity = 0;
+  el.style.display = display || "block";
+
+  // # if modal exists and has classList
+  if(modal.firstElementChild) {
+    // # prevent body scroll when modal is visible
+    document.body.style.overflowY = 'hidden';
+    document.body.style.marginRight = '24px';
+    document.body.style.width = (window.innerWidth - 36) +'px';
+
+    let modalClasses = modal.firstElementChild.classList;
+    if(modalClasses.contains('modal-close')) {
+      modalClasses.remove('modal-close');
+    }
+  }
+    
+  (function fade() {
+    let val = parseFloat(el.style.opacity);
+    if (!((val += .1) > 1)) {
+      el.style.opacity = val;
+      requestAnimationFrame(fade);
+    }
+  })();
+}
+
+function fadeOut(el){
+
+  el.style.opacity = 1;
+  
+  (function fade() {
+    if ((el.style.opacity -= .1) < 0) {      
+      el.style.display = "none";
+      document.body.style.overflowY = 'auto';
+      document.body.style.marginRight = '';
+
+    } else {
+
+      // # if modal is present and has classList
+      if(modal.firstElementChild) {
+        let modalClasses = modal.firstElementChild.classList;
+        if(!modalClasses.contains('modal-close')) {
+          modalClasses.add('modal-close');
+        }
+      }
+      requestAnimationFrame(fade);
+      // # slight delay to avoid clearing element too quickly
+      setTimeout(function(){
+        modal.innerHTML = ''
+      }, 200);
+    }
+  })();
 }
